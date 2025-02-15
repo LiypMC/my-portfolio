@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 const About = () => {
-  const skills = ['Python', 'JavaScript', 'React', 'Node.js', 'Express', 'Postgres Sql', 'Full Stack Development', 'Auth', 'MongoDB'];
+  const skills = ['Python', 'JavaScript', 'React', 'Node.js', 'Express', 'Postgres Sql', 'Full Stack Development', 'Auth', 'MongoDB', 'pyhton', 'python-auth', 'Numpy', 'Data Analisys with python'];
 
   return (
     <motion.div 
@@ -21,7 +21,7 @@ const About = () => {
             transition={{ duration: 0.5 }}
           >
             <motion.img
-              //src="/naolpic.jpg" // Replace with your actual image path
+              src="/naolpic.jpg" // Replace with your actual image path
               alt="Naol's Profile Picture"
               className="w-full h-full object-cover"
               whileHover={{ scale: 1.1 }}
