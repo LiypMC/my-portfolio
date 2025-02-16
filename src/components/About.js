@@ -21,7 +21,7 @@ const About = () => {
             transition={{ duration: 0.5 }}
           >
             <motion.img
-              src="/naolpic.jpg" // Replace with your actual image path
+              src="/naolpic.jpg"
               alt="Naol's Profile Picture"
               className="w-full h-full object-cover"
               whileHover={{ scale: 1.1 }}
