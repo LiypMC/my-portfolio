@@ -18,7 +18,7 @@ const Home = () => {
           transition={{ type: 'spring', stiffness: 120 }}
           className="text-6xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600"
         >
-          Naol. A Demisse
+          Naol Demisse
         </motion.h1>
         <motion.p 
           initial={{ y: 50 }}
@@ -34,7 +34,7 @@ const Home = () => {
           transition={{ delay: 0.5 }}
         >
           <Link to="/projects" className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full inline-flex items-center transition duration-300">
-            View My Work
+            See my works.
             <ArrowRight className="ml-2" size={20} />
           </Link>
         </motion.div>
