@@ -16,7 +16,7 @@ const Footer = () => {
           <a href="https://github.com/ProgNaol" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition duration-300">
             <Github size={24} />
           </a>
-          <a href="mailto:ndemisse2007@outlook.com" className="hover:text-blue-400 transition duration-300">
+          <a href="mailto:dl.naolalemayehu@yahoo.com" className="hover:text-blue-400 transition duration-300">
             <Mail size={24} />
           </a>
         </div>
