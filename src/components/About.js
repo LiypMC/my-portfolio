@@ -60,5 +60,4 @@ const About = () => {
     </motion.div>
   );
 };
-
 export default About;
