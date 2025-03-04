@@ -408,8 +408,8 @@ const Projects = () => {
         'Mobile-responsive layout without any frontend frameworks',
         'MongoDB database for saving user preferences and locations'
       ],
-      githubUrl: "https://github.com/yourusername/weather-app",
-      demoUrl: "https://weather-app-demo.com"
+      githubUrl: "https://github.com/ProgNaol/weatherapp",
+      demoUrl: "https://weatherapp-sjep.onrender.com/"
     },
     {
       id: 2,
@@ -425,8 +425,8 @@ const Projects = () => {
         'MongoDB database for storing user progress and preferences',
         'Custom CSS animations and transitions for interactive elements'
       ],
-      githubUrl: "https://github.com/yourusername/dream-forex",
-      demoUrl: "https://dream-forex.com"
+      githubUrl: "https://github.com/ProgNaol/dreamfx",
+      demoUrl: "https://dreamfx-0ode.onrender.com/"
     }
   ];
 
