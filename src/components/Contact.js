@@ -1,6 +1,6 @@
 import React, { useState, useRef, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Check, AlertTriangle, MapPin, Phone, Mail, ExternalLink, Sparkles } from 'lucide-react';
+import { Send, Check, AlertTriangle, MapPin, Phone, Mail, Clock, ExternalLink, ArrowRight, Sparkles } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import emailjs from '@emailjs/browser';
 import { useInView } from 'react-intersection-observer';
