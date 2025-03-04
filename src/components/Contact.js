@@ -1,6 +1,6 @@
 import React, { useState, useRef, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Check, AlertTriangle, MapPin, Phone, Mail, Clock, ExternalLink, ArrowRight, Sparkles } from 'lucide-react';
+import { Send, Check, AlertTriangle, MapPin, Phone, Mail, ExternalLink, Sparkles } from 'lucide-react';
 import { ThemeContext } from '../context/ThemeContext';
 import emailjs from '@emailjs/browser';
 import { useInView } from 'react-intersection-observer';
@@ -427,6 +427,11 @@ const Contact = () => {
                       </div>
                     </div>
                     
+                    <div className="flex items-start text-white">
+                      <div className="bg-white/20 p-3 rounded-lg mr-4 backdrop-blur-sm">
+                        <Clock size={22} className="text-white" />
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="mt-8">
@@ -443,8 +448,17 @@ const Contact = () => {
                       </motion.div>
                       
                       <p className="text-white text-center">
-                        "I'm currently not available for freelance work and full-time positions, but you can always reach me via email."
+                        "I'm currently available for freelance work and full-time positions. Let's build something amazing together!"
                       </p>
+                      
+                      <motion.a 
+                        href="#"
+                        className="mt-4 text-white/80 hover:text-white text-sm flex items-center justify-center transition-colors"
+                        whileHover={{ x: 5 }}
+                      >
+                        View my resume
+                        <ArrowRight size={14} className="ml-1" />
+                      </motion.a>
                     </motion.div>
                   </div>
                 </div>

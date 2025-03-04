@@ -1,9 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowRight, 
-  ChevronDown, 
-  ChevronUp, 
   ExternalLink, 
   Code, 
   Database, 
