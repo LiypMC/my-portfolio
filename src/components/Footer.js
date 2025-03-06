@@ -12,7 +12,7 @@ const Footer = () => {
     { icon: <Github size={18} />, url: 'https://github.com/yourusername', name: 'GitHub' },
     { icon: <Twitter size={18} />, url: 'https://twitter.com/yourusername', name: 'Twitter' },
     { icon: <Linkedin size={18} />, url: 'https://linkedin.com/in/yourusername', name: 'LinkedIn' },
-    { icon: <Mail size={18} />, url: 'mailto:dl.naolalemayehu@yahoo.com', name: 'Email' },
+    { icon: <Mail size={18} />, url: 'mailto:dl.naol@naol.pro', name: 'Email' },
   ];
 
   // Update year if needed

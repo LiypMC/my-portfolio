@@ -66,7 +66,7 @@ const Contact = () => {
     try {
       // Add the destination email as a hidden field
       const templateParams = {
-        to_email: 'dl.naolalemayehu@yahoo.com',
+        to_email: 'naol@naol.pro',
         from_name: formData.name,
         from_email: formData.email,
         message: formData.message
