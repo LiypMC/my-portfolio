@@ -12,7 +12,7 @@ const Footer = () => {
     { icon: <Github size={18} />, url: 'https://github.com/yourusername', name: 'GitHub' },
     { icon: <Twitter size={18} />, url: 'https://twitter.com/yourusername', name: 'Twitter' },
     { icon: <Linkedin size={18} />, url: 'https://linkedin.com/in/yourusername', name: 'LinkedIn' },
-    { icon: <Mail size={18} />, url: 'mailto:dl.naol@naol.pro', name: 'Email' },
+    { icon: <Mail size={18} />, url: 'mailto:naol@naol.pro', name: 'Email' },
   ];
 
   // Update year if needed
@@ -145,7 +145,7 @@ const Footer = () => {
                 +251 903968770
               </p>
               <p className={`${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                dl.naolalemayehu@yahoo.com
+                naol@naol.pro
               </p>
             </div>
           </motion.div>

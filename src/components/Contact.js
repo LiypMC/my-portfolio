@@ -402,7 +402,7 @@ const Contact = () => {
                       <div>
                         <h4 className="font-semibold text-lg">Email</h4>
                         <a 
-                          href="mailto:dl.naolalemayehu@yahoo.com" 
+                          href="mailto:naol@naol.pro" 
                           className="opacity-90 hover:opacity-100 transition-opacity flex items-center"
                         >
                           dl.naolalemayehu@yahoo.com
