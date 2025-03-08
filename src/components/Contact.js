@@ -173,12 +173,12 @@ const Contact = () => {
                     >
                       Your Name
                     </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
                       onBlur={handleBlur}
                       onFocus={() => handleFocus('name')}
                       className={`w-full p-3.5 rounded-lg border ${
@@ -216,12 +216,12 @@ const Contact = () => {
                     >
                       Email Address
                     </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
                       onBlur={handleBlur}
                       onFocus={() => handleFocus('email')}
                       className={`w-full p-3.5 rounded-lg border ${
@@ -259,12 +259,12 @@ const Contact = () => {
                     >
                       Your Message
                     </label>
-                    <textarea
-                      id="message"
-                      name="message"
+          <textarea
+            id="message"
+            name="message"
                       rows="5"
-                      value={formData.message}
-                      onChange={handleChange}
+            value={formData.message}
+            onChange={handleChange}
                       onBlur={handleBlur}
                       onFocus={() => handleFocus('message')}
                       className={`w-full p-3.5 rounded-lg border ${
@@ -291,9 +291,9 @@ const Contact = () => {
                     )}
                   </motion.div>
                   
-                  <motion.button
-                    type="submit"
-                    disabled={isSubmitting}
+        <motion.button
+          type="submit"
+          disabled={isSubmitting}
                     className={`w-full p-4 rounded-lg font-medium flex items-center justify-center ${
                       isSubmitting 
                         ? 'bg-gray-400 cursor-not-allowed' 
@@ -313,10 +313,10 @@ const Contact = () => {
                         <Send size={18} className="ml-2" />
                       </>
                     )}
-                  </motion.button>
+        </motion.button>
                 </div>
                 
-                <AnimatePresence>
+        <AnimatePresence>
                   {submitStatus === 'success' && (
                     <motion.div 
                       initial={{ opacity: 0, y: -10 }}
@@ -331,16 +331,16 @@ const Contact = () => {
                   
                   {submitStatus === 'error' && (
                     <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
                       className="mt-6 p-4 rounded-lg bg-red-100 text-red-800 flex items-center shadow-md"
-                    >
+            >
                       <AlertTriangle size={20} className="mr-3 flex-shrink-0" />
                       <p>There was an error sending your message. Please try again later or contact me directly via email.</p>
                     </motion.div>
-                  )}
-                </AnimatePresence>
+          )}
+        </AnimatePresence>
               </form>
             </div>
           </motion.div>

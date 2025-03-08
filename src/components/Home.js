@@ -269,7 +269,7 @@ const Home = () => {
                     animate={{ x: [0, 5, 0] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
                   >
-                    <ArrowRight className="ml-2" size={20} />
+            <ArrowRight className="ml-2" size={20} />
                   </motion.div>
                 </motion.button>
               </Link>
@@ -283,7 +283,7 @@ const Home = () => {
                 >
                   Get in touch
                 </motion.button>
-              </Link>
+          </Link>
             </motion.div>
           </div>
 
@@ -453,8 +453,8 @@ const Home = () => {
                         </div>
                       </motion.div>
                     </div>
-                  </div>
-                </motion.div>
+      </div>
+    </motion.div>
               </Link>
             ))}
           </div>

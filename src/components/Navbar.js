@@ -1,14 +1,16 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Code } from 'lucide-react';
+import { Menu, X, Sun, Moon, Code, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeContext } from '../context/ThemeContext';
+import DonateModal from './DonateModal';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [showDonateModal, setShowDonateModal] = useState(false);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -26,6 +28,9 @@ const Navbar = () => {
   }, []);
 
   const toggleMenu = () => setIsOpen(!isOpen);
+  
+  const openDonateModal = () => setShowDonateModal(true);
+  const closeDonateModal = () => setShowDonateModal(false);
 
   const navItems = [
     { path: '/', label: 'Home' },
@@ -105,40 +110,53 @@ const Navbar = () => {
           </motion.span>
         </NavLink>
         
-        <div className="flex items-center space-x-6">
-          <div className="hidden md:flex space-x-8">
-            {navItems.map((item, index) => (
+        <div className="flex items-center space-x-2">
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => (
               <NavLink
-                key={index}
+                key={item.path}
                 to={item.path}
                 className={({ isActive }) => `
-                  relative text-sm font-medium py-2 px-1
+                  px-3 py-2 rounded-lg text-sm font-medium transition-all
                   ${isActive 
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 font-semibold' 
-                    : (isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black')
+                    ? (isDarkMode 
+                      ? 'bg-blue-600/20 text-blue-400' 
+                      : 'bg-blue-50 text-blue-600') 
+                    : (isDarkMode 
+                      ? 'text-gray-300 hover:text-white hover:bg-gray-800/50' 
+                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100')
                   }
-                  after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-gradient-to-r after:from-blue-400 after:to-purple-500
-                  after:transition-all after:duration-300
-                  ${isActive ? 'after:w-full' : 'after:w-0 hover:after:w-full'}
                 `}
               >
                 {item.label}
               </NavLink>
             ))}
+            
+            <motion.button
+              onClick={openDonateModal}
+              className={`flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white' 
+                  : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
+              } hover-glow`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Heart size={14} className="mr-1" />
+              Donate
+            </motion.button>
           </div>
 
-          <motion.button
+          <motion.button 
             onClick={toggleTheme}
             className={`p-2.5 rounded-full ${
               isDarkMode 
                 ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
             } hover-glow`}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </motion.button>
@@ -192,9 +210,28 @@ const Navbar = () => {
                   </NavLink>
                 </motion.div>
               ))}
+              
+              <motion.div variants={itemVariants}>
+                <motion.button
+                  onClick={() => {
+                    openDonateModal();
+                    toggleMenu();
+                  }}
+                  className={`w-full flex items-center justify-center px-4 py-3 rounded-lg my-1 text-sm font-medium
+                    bg-gradient-to-r from-pink-500 to-purple-600 text-white`}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Heart size={14} className="mr-1" />
+                  Donate
+                </motion.button>
+              </motion.div>
             </div>
           </motion.div>
         )}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+        {showDonateModal && <DonateModal onClose={closeDonateModal} isDarkMode={isDarkMode} />}
       </AnimatePresence>
     </motion.nav>
   );

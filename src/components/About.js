@@ -661,9 +661,9 @@ const About = () => {
                         {/* Technologies section */}
                         <div>
                           <h5 className="font-semibold mb-3">Technologies:</h5>
-                          <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
                             {exp.technologies.map((tech, i) => (
-                              <motion.span 
+                <motion.span
                                 key={i}
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={expInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
@@ -698,8 +698,8 @@ const About = () => {
                   <div className="space-y-10">
                     {education.map((edu, index) => (
                       <motion.div 
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
                         animate={eduInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                         transition={{ duration: 0.5, delay: index * 0.2 }}
                         className={`p-8 rounded-xl card-modern relative`}
@@ -775,8 +775,8 @@ const About = () => {
                       <motion.div 
                         key={index}
                         className="card-modern p-6 md:p-8 rounded-xl flex flex-col md:flex-row gap-6 items-center"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.2 }}
                         whileHover={{ y: -5, transition: { duration: 0.3 } }}
                       >
@@ -813,9 +813,9 @@ const About = () => {
                                     ? 'bg-gray-800 text-blue-400 border border-blue-500/30' 
                                     : 'bg-blue-50 text-blue-700 border border-blue-200'
                                 }`}
-                              >
-                                {skill}
-                              </motion.span>
+                >
+                  {skill}
+                </motion.span>
                             ))}
                           </div>
                         </div>
@@ -835,9 +835,9 @@ const About = () => {
                           </a>
                         </motion.div>
                       </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
+              ))}
+            </div>
+          </motion.div>
               )}
             </AnimatePresence>
           </div>

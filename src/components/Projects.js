@@ -75,7 +75,7 @@ const ProjectModal = ({ project, onClose, isDarkMode, currentIndex, totalProject
   };
 
   return (
-    <motion.div 
+  <motion.div 
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 backdrop-blur-md bg-black/60"
       initial="hidden"
       animate="visible"
@@ -378,8 +378,8 @@ const ProjectCard = ({ project, onClick, isDarkMode }) => {
           </div>
         </motion.div>
       </CardWrapper>
-    </motion.div>
-  );
+  </motion.div>
+);
 };
 
 const Projects = () => {
@@ -394,12 +394,12 @@ const Projects = () => {
 
   // Updated projects with Express, MongoDB, EJS and CSS stack
   const projects = [
-    {
+    { 
       id: 1,
       title: 'Weather App',
       category: 'Web Development',
       description: 'Real-time weather forecasting application built with Express.js on the backend and EJS templates with custom CSS on the frontend. This server-rendered application provides accurate weather data with an intuitive interface.',
-      image: '/Screenshot from 2024-10-20 09-46-47.png',
+      image: '/Screenshot from 2024-10-20 09-46-47.png', 
       tags: ['Express.js', 'MongoDB', 'EJS', 'CSS', 'Weather API'],
       features: [
         'Server-rendered views with EJS templating engine',
@@ -413,10 +413,10 @@ const Projects = () => {
     },
     {
       id: 2,
-      title: 'Dream Forex',
+      title: 'Dream Forex', 
       category: 'Finance',
       description: 'Interactive platform for learning forex trading strategies with real-time market data. Built with Express.js and MongoDB for the backend and EJS templates with custom CSS styling for the frontend.',
-      image: '/Screenshot from 2024-10-20 09-49-05.png',
+      image: '/Screenshot from 2024-10-20 09-49-05.png', 
       tags: ['Express.js', 'MongoDB', 'EJS', 'CSS', 'Finance API'],
       features: [
         'Server-side rendered educational content using EJS',
@@ -500,13 +500,13 @@ const Projects = () => {
           My <span className="gradient-text">Projects</span>
         </motion.h2>
         
-        <motion.div 
+          <motion.div
           className="flex flex-wrap justify-center gap-3 mb-16"
           variants={itemVariants}
         >
           {categories.map((category, index) => (
             <motion.button
-              key={index}
+            key={index}
               className={`px-4 py-2 rounded-full text-sm font-medium ${
                 activeCategory === category 
                   ? isDarkMode 
@@ -519,7 +519,7 @@ const Projects = () => {
               onClick={() => setActiveCategory(category)}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ delay: 0.1 + index * 0.05 }}
             >

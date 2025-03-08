@@ -8,6 +8,8 @@ import Projects from './components/Projects';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import CustomCursor from './components/CustomCursor';
+import SuccessPage from './components/SuccessPage';
+import CancelPage from './components/CancelPage';
 import './App.css';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/cancel" element={<CancelPage />} />
         </Routes>
       </main>
       
