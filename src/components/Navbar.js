@@ -132,8 +132,10 @@ const Navbar = () => {
               </NavLink>
             ))}
             
-            <motion.button
-              onClick={openDonateModal}
+            <motion.a
+              href="https://buy.stripe.com/test_fZe8y7g7U6eJ6cg6oo"
+              target="_blank"
+              rel="noopener noreferrer"
               className={`flex items-center px-4 py-2 rounded-full text-sm font-medium ${
                 isDarkMode 
                   ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white' 
@@ -144,7 +146,7 @@ const Navbar = () => {
             >
               <Heart size={14} className="mr-1" />
               Donate
-            </motion.button>
+            </motion.a>
           </div>
 
           <motion.button 
@@ -212,18 +214,18 @@ const Navbar = () => {
               ))}
               
               <motion.div variants={itemVariants}>
-                <motion.button
-                  onClick={() => {
-                    openDonateModal();
-                    toggleMenu();
-                  }}
+                <motion.a
+                  href="https://buy.stripe.com/test_fZe8y7g7U6eJ6cg6oo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={toggleMenu}
                   className={`w-full flex items-center justify-center px-4 py-3 rounded-lg my-1 text-sm font-medium
                     bg-gradient-to-r from-pink-500 to-purple-600 text-white`}
                   whileTap={{ scale: 0.95 }}
                 >
                   <Heart size={14} className="mr-1" />
                   Donate
-                </motion.button>
+                </motion.a>
               </motion.div>
             </div>
           </motion.div>
