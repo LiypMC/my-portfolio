@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
 import { ThemeContext } from '../context/ThemeContext';
-import profilePic from './naolpic.jpg'; // Import profile picture
+import profilePic from './naolpic.svg'; // Import profile picture
 
 const About = () => {
   const { isDarkMode } = useContext(ThemeContext);
