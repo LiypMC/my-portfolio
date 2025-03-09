@@ -8,7 +8,7 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY ||
 
 // Backend URL - will be different in production vs. development
 const BACKEND_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://backend.naol.pro' // Replace with your deployed backend URL
+  ? 'https://backend-server-iota-eight.vercel.app' // Replace with your deployed backend URL
   : 'http://localhost:4000';
 
 const DonateModal = ({ onClose, isDarkMode }) => {

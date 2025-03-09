@@ -409,7 +409,7 @@ const Projects = () => {
         'MongoDB database for saving user preferences and locations'
       ],
       githubUrl: "https://github.com/ProgNaol/weatherapp",
-      demoUrl: "https://weatherapp-sjep.onrender.com/"
+      demoUrl: "https://weather.naol.pro"
     },
     {
       id: 2,
