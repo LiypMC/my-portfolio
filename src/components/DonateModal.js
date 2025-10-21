@@ -7,7 +7,10 @@ import { loadStripe } from '@stripe/stripe-js';
 // accidentally fall back to the Stripe test environment.
 const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
-const fallbackPriceId = process.env.REACT_APP_STRIPE_PRICE_ID;
+const fallbackPriceId = process.env.REACT_APP_STRIPE_PRICE_ID
+  || 'price_1SKlNPRWKWoGAyR5lM8PGhZX';
+const fallbackCurrency = process.env.REACT_APP_STRIPE_CURRENCY || 'usd';
+const fallbackProductName = process.env.REACT_APP_STRIPE_PRODUCT_NAME || 'Donation';
 
 // Backend URL - defaults to the hosted donations API when not provided
 const BACKEND_URL = process.env.REACT_APP_DONATIONS_API_URL
@@ -32,18 +35,36 @@ const DonateModal = ({ onClose, isDarkMode }) => {
       throw new Error('Stripe publishable key is not configured for fallback checkout.');
     }
 
-    if (!fallbackPriceId) {
-      throw new Error('Stripe price ID is not configured for fallback checkout.');
-    }
-
     const stripe = await stripePromise;
-    const { error: redirectError } = await stripe.redirectToCheckout({
-      lineItems: [
-        {
+
+    const fallbackLineItem = (() => {
+      if (fallbackPriceId?.startsWith('price_')) {
+        return {
           price: fallbackPriceId,
           quantity: Math.max(1, Math.floor(defaultAmount / 10)),
+        };
+      }
+
+      if (fallbackPriceId && !fallbackPriceId.startsWith('price_')) {
+        console.warn(
+          'Configured fallback identifier is not a Stripe price ID. Creating an ad-hoc Checkout price instead.'
+        );
+      }
+
+      return {
+        price_data: {
+          currency: fallbackCurrency,
+          unit_amount: Math.max(100, Math.round(defaultAmount * 100)),
+          product_data: {
+            name: fallbackProductName,
+          },
         },
-      ],
+        quantity: 1,
+      };
+    })();
+
+    const { error: redirectError } = await stripe.redirectToCheckout({
+      lineItems: [fallbackLineItem],
       mode: 'payment',
       successUrl: fallbackSuccessUrl,
       cancelUrl: fallbackCancelUrl,
@@ -57,8 +78,7 @@ const DonateModal = ({ onClose, isDarkMode }) => {
   const redirectToStripe = async () => {
     setIsLoading(true);
     setError(null);
-    const shouldFallbackToClientCheckout = () =>
-      Boolean(fallbackPriceId && publishableKey);
+    const shouldFallbackToClientCheckout = () => Boolean(stripePromise);
 
     try {
       console.log('Creating Stripe checkout session...');
@@ -68,8 +88,6 @@ const DonateModal = ({ onClose, isDarkMode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: defaultAmount,
-          successUrl: `${window.location.origin}/success`,
-          cancelUrl: `${window.location.origin}/cancel`
         }),
       });
       
@@ -132,10 +150,30 @@ const DonateModal = ({ onClose, isDarkMode }) => {
         }
       }
 
-      if (!shouldFallbackToClientCheckout() && priceMissing) {
-        setError(
-          'The configured Stripe price ID could not be found. Update your donations API or configure REACT_APP_STRIPE_PRICE_ID for fallback checkout.'
-        );
+      if (priceMissing) {
+        const missingIdMatch = errorMessage.match(/No such price: '([^']+)'/i);
+        const missingId = missingIdMatch?.[1];
+
+        if (!shouldFallbackToClientCheckout()) {
+          const productId = missingId?.startsWith('prod_');
+          const prefixedMessage = missingId
+            ? `Stripe could not find price "${missingId}".`
+            : 'Stripe could not find the configured price.';
+
+          setError(
+            [
+              prefixedMessage,
+              productId
+                ? 'That identifier uses the product prefix (prod_), but Checkout sessions require a price ID that begins with price_.'
+                : null,
+              'Update STRIPE_PRICE_ID on your donations API to a valid price identifier or ensure the API returns a Checkout session URL.'
+            ]
+              .filter(Boolean)
+              .join(' ')
+          );
+        } else {
+          setError(errorMessage || 'Unable to start the donation checkout.');
+        }
       } else {
         setError(errorMessage || 'Unable to start the donation checkout.');
       }
