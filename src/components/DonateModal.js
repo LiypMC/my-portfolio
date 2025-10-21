@@ -68,6 +68,8 @@ const DonateModal = ({ onClose, isDarkMode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: defaultAmount,
+          successUrl: `${window.location.origin}/success`,
+          cancelUrl: `${window.location.origin}/cancel`
         }),
       });
       
@@ -130,30 +132,10 @@ const DonateModal = ({ onClose, isDarkMode }) => {
         }
       }
 
-      if (priceMissing) {
-        const missingIdMatch = errorMessage.match(/No such price: '([^']+)'/i);
-        const missingId = missingIdMatch?.[1];
-
-        if (!shouldFallbackToClientCheckout()) {
-          const productId = missingId?.startsWith('prod_');
-          const prefixedMessage = missingId
-            ? `Stripe could not find price "${missingId}".`
-            : 'Stripe could not find the configured price.';
-
-          setError(
-            [
-              prefixedMessage,
-              productId
-                ? 'That identifier uses the product prefix (prod_), but Checkout sessions require a price ID that begins with price_.'
-                : null,
-              'Update STRIPE_PRICE_ID on your donations API to a valid price identifier or configure REACT_APP_STRIPE_PRICE_ID for fallback checkout.'
-            ]
-              .filter(Boolean)
-              .join(' ')
-          );
-        } else {
-          setError(errorMessage || 'Unable to start the donation checkout.');
-        }
+      if (!shouldFallbackToClientCheckout() && priceMissing) {
+        setError(
+          'The configured Stripe price ID could not be found. Update your donations API or configure REACT_APP_STRIPE_PRICE_ID for fallback checkout.'
+        );
       } else {
         setError(errorMessage || 'Unable to start the donation checkout.');
       }
