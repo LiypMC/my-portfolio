@@ -7,6 +7,7 @@ import { loadStripe } from '@stripe/stripe-js';
 // accidentally fall back to the Stripe test environment.
 const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
+const fallbackPriceId = process.env.REACT_APP_STRIPE_PRICE_ID;
 
 // Backend URL - defaults to the hosted donations API when not provided
 const BACKEND_URL = process.env.REACT_APP_DONATIONS_API_URL
@@ -21,8 +22,44 @@ const DonateModal = ({ onClose, isDarkMode }) => {
   const defaultAmount = 10;
   
   // Define redirectToStripe outside useEffect so it can be used elsewhere
+  const fallbackSuccessUrl =
+    process.env.REACT_APP_STRIPE_SUCCESS_URL || `${window.location.origin}/success`;
+  const fallbackCancelUrl =
+    process.env.REACT_APP_STRIPE_CANCEL_URL || `${window.location.origin}/cancel`;
+
+  const redirectWithClientOnlyCheckout = async () => {
+    if (!stripePromise) {
+      throw new Error('Stripe publishable key is not configured for fallback checkout.');
+    }
+
+    if (!fallbackPriceId) {
+      throw new Error('Stripe price ID is not configured for fallback checkout.');
+    }
+
+    const stripe = await stripePromise;
+    const { error: redirectError } = await stripe.redirectToCheckout({
+      lineItems: [
+        {
+          price: fallbackPriceId,
+          quantity: Math.max(1, Math.floor(defaultAmount / 10)),
+        },
+      ],
+      mode: 'payment',
+      successUrl: fallbackSuccessUrl,
+      cancelUrl: fallbackCancelUrl,
+    });
+
+    if (redirectError) {
+      throw new Error(redirectError.message);
+    }
+  };
+
   const redirectToStripe = async () => {
     setIsLoading(true);
+    setError(null);
+    const shouldFallbackToClientCheckout = () =>
+      Boolean(fallbackPriceId && publishableKey);
+
     try {
       console.log('Creating Stripe checkout session...');
       // Create a checkout session via our backend
@@ -49,7 +86,7 @@ const DonateModal = ({ onClose, isDarkMode }) => {
         }
         throw new Error(errorData.details || `Failed to create checkout session: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('Checkout session created:', data.id || data.url ? 'Success' : 'Failed');
 
@@ -70,14 +107,39 @@ const DonateModal = ({ onClose, isDarkMode }) => {
       const stripe = await stripePromise;
       console.log('Redirecting to Stripe checkout...');
       const { error } = await stripe.redirectToCheckout({ sessionId: data.id });
-      
+
       if (error) {
         console.error('Stripe redirect error:', error);
         throw new Error(error.message);
       }
     } catch (err) {
       console.error('Stripe checkout error:', err);
-      setError(err.message);
+
+      const errorMessage = err?.message || '';
+      const priceMissing = /No such price/i.test(errorMessage);
+      const networkError = /Failed to fetch/i.test(errorMessage) || err?.name === 'TypeError';
+
+      if ((priceMissing || networkError) && shouldFallbackToClientCheckout()) {
+        console.log('Falling back to client-only Stripe checkout with configured price ID.');
+        try {
+          await redirectWithClientOnlyCheckout();
+          return;
+        } catch (fallbackError) {
+          console.error('Fallback checkout failed:', fallbackError);
+          setError(fallbackError.message);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      if (!shouldFallbackToClientCheckout() && priceMissing) {
+        setError(
+          'The configured Stripe price ID could not be found. Update your donations API or configure REACT_APP_STRIPE_PRICE_ID for fallback checkout.'
+        );
+      } else {
+        setError(errorMessage || 'Unable to start the donation checkout.');
+      }
+
       setIsLoading(false);
     }
   };
