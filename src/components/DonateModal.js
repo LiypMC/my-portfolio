@@ -3,13 +3,16 @@ import { motion } from 'framer-motion';
 import { X, Heart } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 
-// Load Stripe
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51R0IXABGna2WXkSDIS8xxw8XN6OCAJPz2f97f5cvZiBRYxHYWbiROyXJUjbsYwbg3ftCmnoKIcnhRtzvwnvGhWtc00JcGN8Uoy');
+// Load Stripe only when a publishable key is configured so we never
+// accidentally fall back to the Stripe test environment.
+const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
-// Backend URL - will be different in production vs. development
-const BACKEND_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://backend-server-iota-eight.vercel.app' // Replace with your deployed backend URL
-  : 'http://localhost:4000';
+// Backend URL - defaults to the hosted donations API when not provided
+const BACKEND_URL = process.env.REACT_APP_DONATIONS_API_URL
+  || (process.env.NODE_ENV === 'production'
+    ? 'https://donate.naol.pro'
+    : 'http://localhost:4000');
 
 const DonateModal = ({ onClose, isDarkMode }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +29,9 @@ const DonateModal = ({ onClose, isDarkMode }) => {
       const response = await fetch(`${BACKEND_URL}/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: defaultAmount }),
+        body: JSON.stringify({
+          amount: defaultAmount,
+        }),
       });
       
       console.log('Backend response status:', response.status);
@@ -44,8 +49,21 @@ const DonateModal = ({ onClose, isDarkMode }) => {
       }
       
       const data = await response.json();
-      console.log('Checkout session created:', data.id ? 'Success' : 'Failed');
-      
+      console.log('Checkout session created:', data.id || data.url ? 'Success' : 'Failed');
+
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      if (!stripePromise) {
+        throw new Error('Stripe publishable key is not configured and the API did not return a redirect URL.');
+      }
+
+      if (!data.id) {
+        throw new Error('Stripe checkout session could not be created.');
+      }
+
       // Redirect to Stripe Checkout
       const stripe = await stripePromise;
       console.log('Redirecting to Stripe checkout...');
