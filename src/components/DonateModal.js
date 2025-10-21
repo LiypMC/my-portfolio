@@ -3,8 +3,10 @@ import { motion } from 'framer-motion';
 import { X, Heart } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 
-// Load Stripe
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51R0IXABGna2WXkSDIS8xxw8XN6OCAJPz2f97f5cvZiBRYxHYWbiROyXJUjbsYwbg3ftCmnoKIcnhRtzvwnvGhWtc00JcGN8Uoy');
+// Load Stripe only when a publishable key is configured so we never
+// accidentally fall back to the Stripe test environment.
+const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
 // Backend URL - defaults to the hosted donations API when not provided
 const BACKEND_URL = process.env.REACT_APP_DONATIONS_API_URL
@@ -54,6 +56,14 @@ const DonateModal = ({ onClose, isDarkMode }) => {
       if (data.url) {
         window.location.href = data.url;
         return;
+      }
+
+      if (!stripePromise) {
+        throw new Error('Stripe publishable key is not configured and the API did not return a redirect URL.');
+      }
+
+      if (!data.id) {
+        throw new Error('Stripe checkout session could not be created.');
       }
 
       // Redirect to Stripe Checkout
