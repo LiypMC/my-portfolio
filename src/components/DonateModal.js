@@ -68,6 +68,8 @@ const DonateModal = ({ onClose, isDarkMode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: defaultAmount,
+          successUrl: `${window.location.origin}/success`,
+          cancelUrl: `${window.location.origin}/cancel`
         }),
       });
       
