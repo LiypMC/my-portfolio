@@ -24,34 +24,12 @@ const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (!stripe) {
-      return;
-    }
-
+    
     setIsProcessing(true);
-    setError(null);
-
-    try {
-      // Use Stripe's hosted checkout with your existing price ID
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        lineItems: [{
-          price: 'price_1SKlNPRWKWoGAyR5lM8PGhZX', // Your existing price ID
-          quantity: Math.max(1, Math.floor(amount / 10)), // Adjust quantity based on amount
-        }],
-        mode: 'payment',
-        successUrl: `${window.location.origin}/donate?success=true`,
-        cancelUrl: `${window.location.origin}/donate?canceled=true`,
-      });
-
-      if (stripeError) {
-        setError(stripeError.message);
-        setIsProcessing(false);
-      }
-    } catch (err) {
-      setError(err.message);
-      setIsProcessing(false);
-    }
+    
+    // Simple redirect to Stripe's hosted checkout
+    // This will redirect to Stripe's secure payment page
+    window.location.href = `https://checkout.stripe.com/pay/cs_live_51S9P6SRWKWoGAyR5ZwuJMXr9GSPhfh6yO0Vney9M3TahLVT7dEUulhvmXU8kLTIyC4ZR3q5zShl4WRzjTVCKiodK00DfW13nu7`;
   };
 
 
@@ -155,7 +133,8 @@ const DonatePage = () => {
 
   const proceedToPayment = () => {
     if (amount >= 5) {
-      setShowPaymentForm(true);
+      // Direct redirect to Stripe's secure payment page
+      window.location.href = `https://checkout.stripe.com/pay/cs_live_51S9P6SRWKWoGAyR5ZwuJMXr9GSPhfh6yO0Vney9M3TahLVT7dEUulhvmXU8kLTIyC4ZR3q5zShl4WRzjTVCKiodK00DfW13nu7`;
     }
   };
 
@@ -255,83 +234,70 @@ const DonatePage = () => {
             transition={{ delay: 0.2 }}
             className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
           >
-            {!showPaymentForm ? (
-              <>
-                <h2 className="text-2xl font-bold mb-6 text-white">
-                  Choose Your Donation Amount
-                </h2>
-                
-                {/* Predefined amounts */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  {predefinedAmounts.map((predefinedAmount) => (
-                    <motion.button
-                      key={predefinedAmount}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleAmountSelect(predefinedAmount)}
-                      className={`p-4 rounded-lg font-semibold transition-all ${
-                        amount === predefinedAmount
-                          ? 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
-                          : 'bg-white/5 backdrop-blur-sm text-white/70 hover:bg-white/10 border border-white/10'
-                      }`}
-                    >
-                      ${predefinedAmount}
-                    </motion.button>
-                  ))}
-                </div>
-
-                {/* Custom amount input */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2 text-white/70">
-                    Or enter a custom amount
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50">
-                      $
-                    </span>
-                    <input
-                      type="number"
-                      min="5"
-                      step="0.01"
-                      value={amount}
-                      onChange={handleCustomAmountChange}
-                      placeholder="Enter custom amount"
-                      className="w-full pl-8 pr-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20"
-                    />
-                  </div>
-                  
-                  {amount < 5 && amount > 0 && (
-                    <p className="text-sm text-red-400 mt-2">
-                      Minimum donation amount is $5.00
-                    </p>
-                  )}
-                </div>
-
-                {/* Proceed button */}
+            <h2 className="text-2xl font-bold mb-6 text-white">
+              Choose Your Donation Amount
+            </h2>
+            
+            {/* Predefined amounts */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {predefinedAmounts.map((predefinedAmount) => (
                 <motion.button
-                  onClick={proceedToPayment}
-                  disabled={amount < 5}
-                  whileHover={{ scale: amount >= 5 ? 1.02 : 1 }}
-                  whileTap={{ scale: amount >= 5 ? 0.98 : 1 }}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
-                    amount >= 5
-                      ? 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20'
-                      : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/5'
+                  key={predefinedAmount}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleAmountSelect(predefinedAmount)}
+                  className={`p-4 rounded-lg font-semibold transition-all ${
+                    amount === predefinedAmount
+                      ? 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
+                      : 'bg-white/5 backdrop-blur-sm text-white/70 hover:bg-white/10 border border-white/10'
                   }`}
                 >
-                  Continue to Payment
+                  ${predefinedAmount}
                 </motion.button>
-              </>
-            ) : (
-              <Elements stripe={stripePromise}>
-                <PaymentForm
-                  amount={amount}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                  isDarkMode={true}
+              ))}
+            </div>
+
+            {/* Custom amount input */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2 text-white/70">
+                Or enter a custom amount
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50">
+                  $
+                </span>
+                <input
+                  type="number"
+                  min="5"
+                  step="0.01"
+                  value={amount}
+                  onChange={handleCustomAmountChange}
+                  placeholder="Enter custom amount"
+                  className="w-full pl-8 pr-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20"
                 />
-              </Elements>
-            )}
+              </div>
+              
+              {amount < 5 && amount > 0 && (
+                <p className="text-sm text-red-400 mt-2">
+                  Minimum donation amount is $5.00
+                </p>
+              )}
+            </div>
+
+            {/* Proceed button */}
+            <motion.button
+              onClick={proceedToPayment}
+              disabled={amount < 5}
+              whileHover={{ scale: amount >= 5 ? 1.02 : 1 }}
+              whileTap={{ scale: amount >= 5 ? 0.98 : 1 }}
+              className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
+                amount >= 5
+                  ? 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20'
+                  : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/5'
+              }`}
+            >
+              Continue to Secure Payment
+            </motion.button>
           </motion.div>
 
           {/* Right side - Information */}

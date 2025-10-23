@@ -139,7 +139,8 @@ const DonateModal = ({ onClose, isDarkMode }) => {
 
   const proceedToPayment = () => {
     if (amount >= 5) {
-      setShowPaymentForm(true);
+      // Direct redirect to Stripe's secure payment page
+      window.location.href = `https://checkout.stripe.com/pay/cs_live_51S9P6SRWKWoGAyR5ZwuJMXr9GSPhfh6yO0Vney9M3TahLVT7dEUulhvmXU8kLTIyC4ZR3q5zShl4WRzjTVCKiodK00DfW13nu7`;
     }
   };
 
