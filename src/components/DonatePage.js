@@ -4,9 +4,7 @@ import { Heart, CreditCard, Shield, CheckCircle, ArrowLeft } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
-  CardElement,
-  useStripe,
-  useElements
+  useStripe
 } from '@stripe/react-stripe-js';
 import { ThemeContext } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,14 +19,13 @@ const BACKEND_URL = process.env.NODE_ENV === 'production'
 // Payment form component
 const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
   const stripe = useStripe();
-  const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe) {
       return;
     }
 
@@ -36,36 +33,26 @@ const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
     setError(null);
 
     try {
-      // Create payment intent
-      const response = await fetch(`${BACKEND_URL}/create-payment-intent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: amount,
-          currency: 'usd'
-        }),
-      });
-
-      const { clientSecret, error: serverError } = await response.json();
-
-      if (serverError) {
-        throw new Error(serverError);
-      }
-
-      // Confirm payment with Stripe
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-        }
+      // Use Stripe's hosted checkout
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        lineItems: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Donation',
+            },
+            unit_amount: Math.round(amount * 100), // Convert to cents
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        successUrl: `${window.location.origin}/donate?success=true`,
+        cancelUrl: `${window.location.origin}/donate?canceled=true`,
       });
 
       if (stripeError) {
         setError(stripeError.message);
         setIsProcessing(false);
-      } else if (paymentIntent.status === 'succeeded') {
-        onSuccess(paymentIntent);
       }
     } catch (err) {
       setError(err.message);
@@ -73,36 +60,10 @@ const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
     }
   };
 
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#ffffff',
-        '::placeholder': {
-          color: '#ffffff50',
-        },
-        backgroundColor: 'transparent',
-      },
-      invalid: {
-        color: '#fa755a',
-        iconColor: '#fa755a',
-      },
-    },
-    hidePostalCode: true,
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <div className="relative">
-          <label className="block text-sm font-medium mb-2 text-white/70">
-            Card Information
-          </label>
-          <div className="p-4 rounded-lg border bg-white/5 backdrop-blur-sm border-white/10">
-            <CardElement options={cardElementOptions} />
-          </div>
-        </div>
-
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -166,6 +127,17 @@ const DonatePage = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   const predefinedAmounts = [5, 10, 25, 50, 100];
+
+  // Check for success/cancel URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      setPaymentSuccess(true);
+    } else if (urlParams.get('canceled') === 'true') {
+      // Handle cancellation if needed
+      console.log('Payment was canceled');
+    }
+  }, []);
 
   const handleAmountSelect = (selectedAmount) => {
     setAmount(selectedAmount);

@@ -4,9 +4,7 @@ import { X, Heart, CreditCard, Shield, CheckCircle } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
-  CardElement,
-  useStripe,
-  useElements
+  useStripe
 } from '@stripe/react-stripe-js';
 
 // Stripe configuration
@@ -19,14 +17,13 @@ const BACKEND_URL = process.env.NODE_ENV === 'production'
 // Payment form component
 const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
   const stripe = useStripe();
-  const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe) {
       return;
     }
 
@@ -34,36 +31,26 @@ const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
     setError(null);
 
     try {
-      // Create payment intent
-      const response = await fetch(`${BACKEND_URL}/create-payment-intent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Use Stripe's hosted checkout
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        lineItems: [{
+        price_data: {
+            currency: 'usd',
+          product_data: {
+              name: 'Donation',
+            },
+            unit_amount: Math.round(amount * 100), // Convert to cents
         },
-        body: JSON.stringify({
-          amount: amount,
-          currency: 'usd'
-        }),
-      });
-      
-      const { clientSecret, error: serverError } = await response.json();
-
-      if (serverError) {
-        throw new Error(serverError);
-      }
-
-      // Confirm payment with Stripe
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: elements.getElement(CardElement),
-        }
+        quantity: 1,
+        }],
+      mode: 'payment',
+        successUrl: `${window.location.origin}/success`,
+        cancelUrl: `${window.location.origin}/cancel`,
       });
 
       if (stripeError) {
         setError(stripeError.message);
         setIsProcessing(false);
-      } else if (paymentIntent.status === 'succeeded') {
-        onSuccess(paymentIntent);
       }
     } catch (err) {
       setError(err.message);
@@ -71,36 +58,9 @@ const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
     }
   };
 
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: isDarkMode ? '#ffffff' : '#424770',
-        '::placeholder': {
-          color: isDarkMode ? '#9ca3af' : '#aab7c4',
-        },
-        backgroundColor: 'transparent',
-      },
-      invalid: {
-        color: '#fa755a',
-        iconColor: '#fa755a',
-      },
-    },
-    hidePostalCode: true,
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <div className="relative">
-          <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-            Card Information
-          </label>
-          <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
-            <CardElement options={cardElementOptions} />
-          </div>
-        </div>
-
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
