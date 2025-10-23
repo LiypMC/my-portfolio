@@ -33,17 +33,11 @@ const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
     setError(null);
 
     try {
-      // Use Stripe's hosted checkout
+      // Use Stripe's hosted checkout with your existing price ID
       const { error: stripeError } = await stripe.redirectToCheckout({
         lineItems: [{
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: 'Donation',
-            },
-            unit_amount: Math.round(amount * 100), // Convert to cents
-          },
-          quantity: 1,
+          price: 'price_1SKlNPRWKWoGAyR5lM8PGhZX', // Your existing price ID
+          quantity: Math.max(1, Math.floor(amount / 10)), // Adjust quantity based on amount
         }],
         mode: 'payment',
         successUrl: `${window.location.origin}/donate?success=true`,
