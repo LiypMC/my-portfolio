@@ -139,8 +139,8 @@ const DonateModal = ({ onClose, isDarkMode }) => {
 
   const proceedToPayment = () => {
     if (amount >= 5) {
-      // Direct redirect to Stripe's secure payment page
-      window.location.href = `https://checkout.stripe.com/pay/cs_live_51S9P6SRWKWoGAyR5ZwuJMXr9GSPhfh6yO0Vney9M3TahLVT7dEUulhvmXU8kLTIyC4ZR3q5zShl4WRzjTVCKiodK00DfW13nu7`;
+      // Simple redirect to Stripe payment link
+      window.location.href = 'https://donate.stripe.com/aFabJ3aqh2dZ6pZfrb6AM00';
     }
   };
 
@@ -236,89 +236,25 @@ const DonateModal = ({ onClose, isDarkMode }) => {
           </motion.button>
           </div>
 
-        {!showPaymentForm ? (
-          <>
-            {/* Amount Selection */}
-            <div className="space-y-6">
-              <div>
-                <label className={`block text-sm font-medium mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Choose donation amount
-                </label>
-                
-                {/* Predefined amounts */}
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  {predefinedAmounts.map((predefinedAmount) => (
-                    <motion.button
-                      key={predefinedAmount}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleAmountSelect(predefinedAmount)}
-                      className={`p-3 rounded-lg font-semibold transition-all ${
-                        amount === predefinedAmount
-                          ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
-                          : isDarkMode
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      ${predefinedAmount}
-                    </motion.button>
-                  ))}
-                </div>
-
-                {/* Custom amount input */}
-            <div className="relative">
-                  <span className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500`}>
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    min="5"
-                    step="0.01"
-                    value={amount}
-                    onChange={handleCustomAmountChange}
-                    placeholder="Enter custom amount"
-                    className={`w-full pl-8 pr-4 py-3 rounded-lg border ${
-                      isDarkMode
-                        ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400'
-                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                  />
-                </div>
-                
-                {amount < 5 && amount > 0 && (
-                  <p className="text-sm text-red-500 mt-2">
-                    Minimum donation amount is $5.00
-                  </p>
-                )}
-              </div>
-
-              {/* Proceed button */}
-              <motion.button
-                onClick={proceedToPayment}
-                disabled={amount < 5}
-                whileHover={{ scale: amount >= 5 ? 1.02 : 1 }}
-                whileTap={{ scale: amount >= 5 ? 0.98 : 1 }}
-                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
-                  amount >= 5
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                Continue to Payment
-              </motion.button>
+        {/* Simple donation */}
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className={`p-6 rounded-lg mb-6 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+              <div className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>$10</div>
+              <div className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>One-time donation</div>
             </div>
-          </>
-        ) : (
-          <Elements stripe={stripePromise}>
-            <PaymentForm
-              amount={amount}
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-              isDarkMode={isDarkMode}
-            />
-          </Elements>
-        )}
+          </div>
+
+          {/* Single donation button */}
+          <motion.button
+            onClick={() => window.location.href = 'https://donate.stripe.com/aFabJ3aqh2dZ6pZfrb6AM00'}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25"
+          >
+            Donate $10
+          </motion.button>
+        </div>
 
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">

@@ -133,8 +133,8 @@ const DonatePage = () => {
 
   const proceedToPayment = () => {
     if (amount >= 5) {
-      // Direct redirect to Stripe's secure payment page
-      window.location.href = `https://checkout.stripe.com/pay/cs_live_51S9P6SRWKWoGAyR5ZwuJMXr9GSPhfh6yO0Vney9M3TahLVT7dEUulhvmXU8kLTIyC4ZR3q5zShl4WRzjTVCKiodK00DfW13nu7`;
+      // Simple redirect to Stripe payment link
+      window.location.href = 'https://donate.stripe.com/aFabJ3aqh2dZ6pZfrb6AM00';
     }
   };
 
@@ -235,68 +235,24 @@ const DonatePage = () => {
             className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl"
           >
             <h2 className="text-2xl font-bold mb-6 text-white">
-              Choose Your Donation Amount
+              Support My Work
             </h2>
             
-            {/* Predefined amounts */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {predefinedAmounts.map((predefinedAmount) => (
-                <motion.button
-                  key={predefinedAmount}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleAmountSelect(predefinedAmount)}
-                  className={`p-4 rounded-lg font-semibold transition-all ${
-                    amount === predefinedAmount
-                      ? 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
-                      : 'bg-white/5 backdrop-blur-sm text-white/70 hover:bg-white/10 border border-white/10'
-                  }`}
-                >
-                  ${predefinedAmount}
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Custom amount input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2 text-white/70">
-                Or enter a custom amount
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50">
-                  $
-                </span>
-                <input
-                  type="number"
-                  min="5"
-                  step="0.01"
-                  value={amount}
-                  onChange={handleCustomAmountChange}
-                  placeholder="Enter custom amount"
-                  className="w-full pl-8 pr-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20"
-                />
+            <div className="text-center mb-8">
+              <div className="p-6 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 mb-6">
+                <div className="text-3xl font-bold text-white mb-2">$10</div>
+                <div className="text-white/70">One-time donation</div>
               </div>
-              
-              {amount < 5 && amount > 0 && (
-                <p className="text-sm text-red-400 mt-2">
-                  Minimum donation amount is $5.00
-                </p>
-              )}
             </div>
 
-            {/* Proceed button */}
+            {/* Single donation button */}
             <motion.button
-              onClick={proceedToPayment}
-              disabled={amount < 5}
-              whileHover={{ scale: amount >= 5 ? 1.02 : 1 }}
-              whileTap={{ scale: amount >= 5 ? 0.98 : 1 }}
-              className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
-                amount >= 5
-                  ? 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20'
-                  : 'bg-white/5 text-white/30 cursor-not-allowed border border-white/5'
-              }`}
+              onClick={() => window.location.href = 'https://donate.stripe.com/aFabJ3aqh2dZ6pZfrb6AM00'}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20"
             >
-              Continue to Secure Payment
+              Donate $10
             </motion.button>
           </motion.div>
 
