@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import CustomCursor from './components/CustomCursor';
 import SuccessPage from './components/SuccessPage';
 import CancelPage from './components/CancelPage';
+import DonatePage from './components/DonatePage';
 import './App.css';
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/donate" element={<DonatePage />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route path="/cancel" element={<CancelPage />} />
         </Routes>

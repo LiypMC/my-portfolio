@@ -1,204 +1,203 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, Heart } from 'lucide-react';
+import { X, Heart, CreditCard, Shield, CheckCircle } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements
+} from '@stripe/react-stripe-js';
 
-// Load Stripe only when a publishable key is configured so we never
-// accidentally fall back to the Stripe test environment.
-const publishableKey = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
-const fallbackPriceId = process.env.REACT_APP_STRIPE_PRICE_ID
-  || 'price_1SKlNPRWKWoGAyR5lM8PGhZX';
-const fallbackCurrency = process.env.REACT_APP_STRIPE_CURRENCY || 'usd';
-const fallbackProductName = process.env.REACT_APP_STRIPE_PRODUCT_NAME || 'Donation';
+// Stripe configuration
+const stripePromise = loadStripe('pk_live_51S9P6SRWKWoGAyR5CagxSe1F2QDv3bsmJwUtZsac3buIjaIZLUxx5hJCHmuwKWNV3kO4gtf90EkupTYA8XQxOMLK005nIjaXfc');
 
-// Backend URL - defaults to the hosted donations API when not provided
-const BACKEND_URL = process.env.REACT_APP_DONATIONS_API_URL
-  || (process.env.NODE_ENV === 'production'
-    ? 'https://donate.naol.pro'
-    : 'http://localhost:4000');
+const BACKEND_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-domain.com' 
+  : 'http://localhost:4000';
 
-const DonateModal = ({ onClose, isDarkMode }) => {
-  const [isLoading, setIsLoading] = useState(false);
+// Payment form component
+const PaymentForm = ({ amount, onSuccess, onError, isDarkMode }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
-  // Default donation amount
-  const defaultAmount = 10;
-  
-  // Define redirectToStripe outside useEffect so it can be used elsewhere
-  const fallbackSuccessUrl =
-    process.env.REACT_APP_STRIPE_SUCCESS_URL || `${window.location.origin}/success`;
-  const fallbackCancelUrl =
-    process.env.REACT_APP_STRIPE_CANCEL_URL || `${window.location.origin}/cancel`;
 
-  const redirectWithClientOnlyCheckout = async () => {
-    if (!stripePromise) {
-      throw new Error('Stripe publishable key is not configured for fallback checkout.');
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      return;
     }
 
-    const stripe = await stripePromise;
-
-    const fallbackLineItem = (() => {
-      if (fallbackPriceId?.startsWith('price_')) {
-        return {
-          price: fallbackPriceId,
-          quantity: Math.max(1, Math.floor(defaultAmount / 10)),
-        };
-      }
-
-      if (fallbackPriceId && !fallbackPriceId.startsWith('price_')) {
-        console.warn(
-          'Configured fallback identifier is not a Stripe price ID. Creating an ad-hoc Checkout price instead.'
-        );
-      }
-
-      return {
-        price_data: {
-          currency: fallbackCurrency,
-          unit_amount: Math.max(100, Math.round(defaultAmount * 100)),
-          product_data: {
-            name: fallbackProductName,
-          },
-        },
-        quantity: 1,
-      };
-    })();
-
-    const { error: redirectError } = await stripe.redirectToCheckout({
-      lineItems: [fallbackLineItem],
-      mode: 'payment',
-      successUrl: fallbackSuccessUrl,
-      cancelUrl: fallbackCancelUrl,
-    });
-
-    if (redirectError) {
-      throw new Error(redirectError.message);
-    }
-  };
-
-  const redirectToStripe = async () => {
-    setIsLoading(true);
+    setIsProcessing(true);
     setError(null);
-    const shouldFallbackToClientCheckout = () => Boolean(stripePromise);
 
     try {
-      console.log('Creating Stripe checkout session...');
-      // Create a checkout session via our backend
-      const response = await fetch(`${BACKEND_URL}/create-checkout-session`, {
+      // Create payment intent
+      const response = await fetch(`${BACKEND_URL}/create-payment-intent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          amount: defaultAmount,
+          amount: amount,
+          currency: 'usd'
         }),
       });
       
-      console.log('Backend response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Backend error response:', errorText);
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch (e) {
-          errorData = { details: errorText };
+      const { clientSecret, error: serverError } = await response.json();
+
+      if (serverError) {
+        throw new Error(serverError);
+      }
+
+      // Confirm payment with Stripe
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
         }
-        throw new Error(errorData.details || `Failed to create checkout session: ${response.status}`);
-      }
+      });
 
-      const data = await response.json();
-      console.log('Checkout session created:', data.id || data.url ? 'Success' : 'Failed');
-
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      if (!stripePromise) {
-        throw new Error('Stripe publishable key is not configured and the API did not return a redirect URL.');
-      }
-
-      if (!data.id) {
-        throw new Error('Stripe checkout session could not be created.');
-      }
-
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      console.log('Redirecting to Stripe checkout...');
-      const { error } = await stripe.redirectToCheckout({ sessionId: data.id });
-
-      if (error) {
-        console.error('Stripe redirect error:', error);
-        throw new Error(error.message);
+      if (stripeError) {
+        setError(stripeError.message);
+        setIsProcessing(false);
+      } else if (paymentIntent.status === 'succeeded') {
+        onSuccess(paymentIntent);
       }
     } catch (err) {
-      console.error('Stripe checkout error:', err);
-
-      const errorMessage = err?.message || '';
-      const priceMissing = /No such price/i.test(errorMessage);
-      const networkError = /Failed to fetch/i.test(errorMessage) || err?.name === 'TypeError';
-
-      if ((priceMissing || networkError) && shouldFallbackToClientCheckout()) {
-        console.log('Falling back to client-only Stripe checkout with configured price ID.');
-        try {
-          await redirectWithClientOnlyCheckout();
-          return;
-        } catch (fallbackError) {
-          console.error('Fallback checkout failed:', fallbackError);
-          setError(fallbackError.message);
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      if (priceMissing) {
-        const missingIdMatch = errorMessage.match(/No such price: '([^']+)'/i);
-        const missingId = missingIdMatch?.[1];
-
-        if (!shouldFallbackToClientCheckout()) {
-          const productId = missingId?.startsWith('prod_');
-          const prefixedMessage = missingId
-            ? `Stripe could not find price "${missingId}".`
-            : 'Stripe could not find the configured price.';
-
-          setError(
-            [
-              prefixedMessage,
-              productId
-                ? 'That identifier uses the product prefix (prod_), but Checkout sessions require a price ID that begins with price_.'
-                : null,
-              'Update STRIPE_PRICE_ID on your donations API to a valid price identifier or ensure the API returns a Checkout session URL.'
-            ]
-              .filter(Boolean)
-              .join(' ')
-          );
-        } else {
-          setError(errorMessage || 'Unable to start the donation checkout.');
-        }
-      } else {
-        setError(errorMessage || 'Unable to start the donation checkout.');
-      }
-
-      setIsLoading(false);
+      setError(err.message);
+      setIsProcessing(false);
     }
   };
-  
-  // Redirect to Stripe checkout immediately when component mounts
+
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: isDarkMode ? '#ffffff' : '#424770',
+        '::placeholder': {
+          color: isDarkMode ? '#9ca3af' : '#aab7c4',
+        },
+        backgroundColor: 'transparent',
+      },
+      invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a',
+      },
+    },
+    hidePostalCode: true,
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div className="relative">
+          <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            Card Information
+          </label>
+          <div className={`p-4 rounded-lg border ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
+            <CardElement options={cardElementOptions} />
+          </div>
+        </div>
+
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm"
+          >
+            {error}
+          </motion.div>
+        )}
+
+        <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
+          <div className="flex items-center justify-between">
+            <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Donation Amount:
+            </span>
+            <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              ${amount.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <motion.button
+        type="submit"
+        disabled={!stripe || isProcessing}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
+          !stripe || isProcessing
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:shadow-lg hover:shadow-purple-500/25'
+        }`}
+      >
+        {isProcessing ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+            Processing...
+          </div>
+        ) : (
+          <div className="flex items-center justify-center">
+            <CreditCard className="w-5 h-5 mr-2" />
+            Donate ${amount.toFixed(2)}
+          </div>
+        )}
+      </motion.button>
+
+      <div className="flex items-center justify-center text-xs text-gray-500">
+        <Shield className="w-4 h-4 mr-1" />
+        Secured by Stripe
+      </div>
+    </form>
+  );
+};
+
+// Main donation modal component
+const DonateModal = ({ onClose, isDarkMode }) => {
+  const [amount, setAmount] = useState(10);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+
+  const predefinedAmounts = [5, 10, 25, 50, 100];
+
+  const handleAmountSelect = (selectedAmount) => {
+    setAmount(selectedAmount);
+  };
+
+  const handleCustomAmountChange = (e) => {
+    const value = parseFloat(e.target.value) || 0;
+    setAmount(value);
+  };
+
+  const handlePaymentSuccess = (paymentIntent) => {
+    setPaymentSuccess(true);
+    setTimeout(() => {
+      onClose();
+    }, 3000);
+  };
+
+  const handlePaymentError = (error) => {
+    console.error('Payment error:', error);
+  };
+
+  const proceedToPayment = () => {
+    if (amount >= 5) {
+      setShowPaymentForm(true);
+    }
+  };
+
+  // Reset body overflow when component unmounts
   useEffect(() => {
-    console.log('DonateModal mounted, initiating Stripe redirect');
-    console.log('Using backend URL:', BACKEND_URL);
-    console.log('Stripe publishable key available:', !!process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
-    
-    // Run the redirect immediately on mount
-    redirectToStripe();
-    
-    // Clean up function
+    document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'auto';
     };
   }, []);
 
-  // If there's an error, show a modern error modal
-  if (error) {
+  if (paymentSuccess) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -212,166 +211,170 @@ const DonateModal = ({ onClose, isDarkMode }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25 }}
-          className={`w-full max-w-sm p-8 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-white'} shadow-2xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}
+          className={`w-full max-w-md p-8 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-white'} shadow-2xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Card header with alert icon */}
-          <div className="flex justify-center mb-6">
-            <div className={`p-4 rounded-full ${isDarkMode ? 'bg-red-900/30' : 'bg-red-100'}`}>
-              <svg className="w-8 h-8 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
+          <div className="text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', damping: 15 }}
+              className="flex justify-center mb-6"
+            >
+              <div className="p-4 bg-green-100 rounded-full">
+                <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
-          </div>
-          
-          {/* Title with gradient text */}
-          <h3 className={`text-center text-xl font-bold mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-600">
-              Payment Connection Error
+            </motion.div>
+            
+            <h3 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-emerald-600">
+                Thank You!
             </span>
           </h3>
           
-          {/* Error message box with modern styling */}
-          <div className={`mb-5 p-4 rounded-xl text-sm ${isDarkMode ? 'bg-red-900/20 text-red-300 border border-red-800/50' : 'bg-red-50 text-red-600 border border-red-100'}`}>
-            <div className="font-medium mb-1">Error details:</div>
-            <div className="font-mono text-xs overflow-auto max-h-24">{error}</div>
-          </div>
-          
-          {/* Server status */}
-          <div className={`mb-6 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            <p className="mb-2">Potential causes:</p>
-            <ul className="list-disc pl-5 space-y-1 text-xs">
-              <li>Backend server not running at <code className="font-mono bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">{BACKEND_URL}</code></li>
-              <li>Stripe API key not configured properly</li>
-              <li>Network connectivity issues</li>
-              <li>CORS policy restrictions</li>
-            </ul>
-          </div>
-          
-          {/* Action buttons */}
-          <div className="flex space-x-3">
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={onClose}
-              className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'} transition-colors`}
-            >
-              Close
-            </motion.button>
+            <p className={`text-lg mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Your donation of <span className="font-semibold text-green-600">${amount.toFixed(2)}</span> has been processed successfully.
+            </p>
             
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                setError(null);
-                setIsLoading(true);
-                setTimeout(() => redirectToStripe(), 500);
-              }}
-              className="flex-1 py-2.5 px-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium text-sm hover:shadow-lg transition-all"
-            >
-              Try Again
-            </motion.button>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              This window will close automatically...
+            </p>
           </div>
         </motion.div>
       </motion.div>
     );
   }
 
-  // Show loading indicator while attempting to redirect
-  if (isLoading) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+      onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25 }}
-          className={`w-full max-w-sm p-8 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-white'} shadow-2xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}
-        >
-          {/* Card header with pulse effect */}
-          <div className="flex justify-center mb-6">
-            <motion.div 
-              className={`p-4 rounded-full ${isDarkMode ? 'bg-purple-900/30' : 'bg-purple-100'}`}
-              animate={{ 
-                boxShadow: [
-                  `0 0 0 0 ${isDarkMode ? 'rgba(147, 51, 234, 0.7)' : 'rgba(168, 85, 247, 0.4)'}`, 
-                  `0 0 0 10px ${isDarkMode ? 'rgba(147, 51, 234, 0)' : 'rgba(168, 85, 247, 0)'}`
-                ],
-              }}
-              transition={{ 
-                repeat: Infinity, 
-                duration: 1.5,
-                ease: "easeInOut"
-              }}
-            >
-              <svg className={`w-8 h-8 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                <line x1="1" y1="10" x2="23" y2="10"></line>
-              </svg>
-            </motion.div>
+        className={`w-full max-w-md p-8 rounded-2xl ${isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-white'} shadow-2xl border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <div className="p-2 bg-red-100 rounded-lg mr-3">
+              <Heart className="w-6 h-6 text-red-500" />
+            </div>
+            <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              Support My Work
+            </h2>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onClose}
+            className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} transition-colors`}
+          >
+            <X className={`w-5 h-5 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
+          </motion.button>
           </div>
 
-          {/* Title with gradient text */}
-          <h3 className={`text-center text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600">
-              Connecting to Stripe
-            </span>
-          </h3>
-          
-          {/* Status message */}
-          <p className={`text-center mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
-            Preparing your secure payment connection...
-          </p>
-          
-          {/* Loading animation */}
-          <div className="flex justify-center items-center mb-4">
+        {!showPaymentForm ? (
+          <>
+            {/* Amount Selection */}
+            <div className="space-y-6">
+              <div>
+                <label className={`block text-sm font-medium mb-3 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Choose donation amount
+                </label>
+                
+                {/* Predefined amounts */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {predefinedAmounts.map((predefinedAmount) => (
+                    <motion.button
+                      key={predefinedAmount}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleAmountSelect(predefinedAmount)}
+                      className={`p-3 rounded-lg font-semibold transition-all ${
+                        amount === predefinedAmount
+                          ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                          : isDarkMode
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      ${predefinedAmount}
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Custom amount input */}
             <div className="relative">
-              {/* Outer ring */}
-              <motion.div 
-                className="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-gray-700"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              />
-              
-              {/* Inner spinning gradient ring */}
-              <motion.div 
-                className="absolute top-0 left-0 w-16 h-16 rounded-full border-t-2 border-l-2 border-r-2 border-transparent"
-                style={{ 
-                  borderTopColor: '#8B5CF6', 
-                  borderRightColor: '#3B82F6', 
-                  borderLeftColor: '#EC4899',
-                }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              />
-              
-              {/* Center dot */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-purple-500 rounded-full" />
+                  <span className={`absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500`}>
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    min="5"
+                    step="0.01"
+                    value={amount}
+                    onChange={handleCustomAmountChange}
+                    placeholder="Enter custom amount"
+                    className={`w-full pl-8 pr-4 py-3 rounded-lg border ${
+                      isDarkMode
+                        ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400'
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                  />
+                </div>
+                
+                {amount < 5 && amount > 0 && (
+                  <p className="text-sm text-red-500 mt-2">
+                    Minimum donation amount is $5.00
+                  </p>
+                )}
+              </div>
+
+              {/* Proceed button */}
+              <motion.button
+                onClick={proceedToPayment}
+                disabled={amount < 5}
+                whileHover={{ scale: amount >= 5 ? 1.02 : 1 }}
+                whileTap={{ scale: amount >= 5 ? 0.98 : 1 }}
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
+                  amount >= 5
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg hover:shadow-purple-500/25'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Continue to Payment
+              </motion.button>
             </div>
+          </>
+        ) : (
+          <Elements stripe={stripePromise}>
+            <PaymentForm
+              amount={amount}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              isDarkMode={isDarkMode}
+            />
+          </Elements>
+        )}
+
+        {/* Footer */}
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center text-xs text-gray-500">
+            <Shield className="w-4 h-4 mr-1" />
+            <span>Your payment information is secure and encrypted</span>
           </div>
-          
-          {/* Security note */}
-          <div className={`flex items-center justify-center mt-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} text-xs`}>
-            <svg className="w-3 h-3 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            <span>Secure payment powered by Stripe</span>
           </div>
         </motion.div>
       </motion.div>
     );
-  }
-
-  // Return null if no error and not loading (redirect should happen)
-  return null;
 };
 
 export default DonateModal; 

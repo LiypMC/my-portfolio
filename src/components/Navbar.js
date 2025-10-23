@@ -132,20 +132,17 @@ const Navbar = () => {
               </NavLink>
             ))}
             
-            <motion.button
-              type="button"
-              onClick={openDonateModal}
+            <NavLink
+              to="/donate"
               className={`flex items-center px-4 py-2 rounded-full text-sm font-medium ${
                 isDarkMode
                   ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
                   : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
               } hover-glow`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
               <Heart size={14} className="mr-1" />
               Donate
-            </motion.button>
+            </NavLink>
           </div>
 
           <motion.button 
@@ -213,18 +210,14 @@ const Navbar = () => {
               ))}
               
               <motion.div variants={itemVariants}>
-                <motion.button
-                  type="button"
-                  onClick={() => {
-                    toggleMenu();
-                    openDonateModal();
-                  }}
+                <NavLink
+                  to="/donate"
                   className="w-full flex items-center justify-center px-4 py-3 rounded-lg my-1 text-sm font-medium bg-gradient-to-r from-pink-500 to-purple-600 text-white"
-                  whileTap={{ scale: 0.95 }}
+                  onClick={toggleMenu}
                 >
                   <Heart size={14} className="mr-1" />
                   Donate
-                </motion.button>
+                </NavLink>
               </motion.div>
             </div>
           </motion.div>
